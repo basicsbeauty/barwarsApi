@@ -9,6 +9,7 @@ import threading
 threading._DummyThread._Thread__stop = lambda x: 42
 
 '''
+
 class ProfileHandler(BaseHandler):
   def read(self, request, test=None):
     resp = rc.ALL_OK
@@ -46,6 +47,7 @@ class ChallengeHandler(BaseHandler):
     resp['Content-Type'] = 'text/json'
     respDict = {"challenges": [{"cid": 2345, "description": "Diet Coke"}, {"cid": 3456, "description": "Coke Classic"} ]}
     resp.content = respDict
+    return resp
 
   def create(self, request, test=None):
     resp = rc.ALL_OK
@@ -167,5 +169,4 @@ class RequestHandler(BaseHandler):
     respDict = {"data": base64.b64encode(resp_msg.SerializeToString())}
     resp.content = respDict
     return resp
-
 
