@@ -156,7 +156,23 @@ def generateResponse(raw_data, msg_id, req_type):
 class RequestHandler(BaseHandler):
   def read(self, request, test=None):
     data = request.GET.get('data', '')
-    parsed_data = parseData(data, 'GET_PROFILE')
+    parsed_data = parseData(data)
+    if parsed_data['status'] == FAILURE:
+        return sendErrResp(parsed_data['err_msg'])  
+    resp_raw_data = processRequest(parsed_data['req'])
+    if resp_raw['status'] == FAILURE:
+        return sendErrResp(resp_raw['err_msg'])  
+   
+    resp_msg = generateResponse(resp_raw['data'], parsed_data['req_msg_id'], parsed_data['type'])
+    resp = rc.ALL_OK
+    resp['Content-Type'] = 'text/json'
+    respDict = {"data": base64.b64encode(resp_msg.SerializeToString())}
+    resp.content = respDict
+    return resp
+
+  def create(self, request, test=None):
+    data = request.POST['data']
+    parsed_data = parseData(data)
     if parsed_data['status'] == FAILURE:
         return sendErrResp(parsed_data['err_msg'])  
     resp_raw_data = processRequest(parsed_data['req'])
