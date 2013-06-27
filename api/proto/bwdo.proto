@@ -2,7 +2,7 @@ package BarWars;
 
 message ChallengeDO {
 
-    required string cid          = 1;
+    optional string cid          = 1;
     optional string bar_code     = 2;
     optional string description  = 3;
 }
@@ -14,7 +14,7 @@ message UserDO {
     optional string profile_image_uri = 3;  
 
     optional uint32 points            = 4;
-    optional uint32 sovled_count      = 5;
+    optional uint32 solved_count      = 5;
     optional uint32 submit_count      = 6;
 }
 
@@ -25,66 +25,66 @@ enum OperationType {
     GET_PROFILE            = 2;
     GET_CHALLENGES_LIST    = 3;
 
-    POST_PROFILE            = 4;
+    POST_PROFILE           = 4;
     POST_SUBMIT_CHALLENGE  = 5;
     POST_SOLVE_CHALLENGE   = 6;
 }
 
 // GET Requests
-message GetDescriptionRequest {
-
-    required ChallengeDO    challenge = 1;
-    optional UserDO         user      = 2;
-}
-
-message GetDescriptionReponse {
-    required ChallengeDO    challenge = 1;
-}
-
-message GetProfileRequest {
-    required UserDO user = 1;
-}
-message GetProfileResponse {
-    required UserDO user = 1;
-}
-
-message GetChallengesListRequest {
-
-    required UserDO user   = 1;
-    optional string filter = 2;
-}
-
-message GetChallengesListResponse {
-
-    repeated ChallengeDO challenge_list = 1;
-}
+    message GetDescriptionRequest {
+    
+        required ChallengeDO    challenge = 1;
+        optional UserDO         user      = 2;
+    }
+    
+    message GetDescriptionResponse {
+        required ChallengeDO    challenge = 1;
+    }
+    
+    message GetProfileRequest {
+        required UserDO user = 1;
+    }
+    message GetProfileResponse {
+        required UserDO user = 1;
+    }
+    
+    message GetChallengesListRequest {
+    
+        required UserDO user   = 1;
+        optional string filter = 2;
+    }
+    
+    message GetChallengesListResponse {
+    
+        repeated ChallengeDO challenge_list = 1;
+    }
 
 // POST Requests
-message CreateProfileDORequest {
-    required UserDO user = 1;
-}
-
-message CreateProfileDOResponse {       
-    required UserDO user = 1;
-}
-
-message SubmitChallengeDORequest {
-    required ChallengeDO challenge = 1;
-    optional UserDO      user      = 2;
-}
-
-message SubmitChallengeDOResponse {
-    required UserDO user = 1;
-}
-
-message SolveChallengeDORequest {
-    required ChallengeDO challenge = 1;
-    optional UserDO      user      = 2;
-}
-
-message SolveChallengeDOResponse {
-    required UserDO user = 1;
-}
+    message CreateProfileDORequest {
+        required UserDO user = 1;
+    }
+    
+    message CreateProfileDOResponse {       
+        required UserDO user = 1;
+    }
+    
+    message SubmitChallengeDORequest {
+        required ChallengeDO challenge = 1;
+        optional UserDO      user      = 2;
+    }
+    
+    message SubmitChallengeDOResponse {
+        required UserDO user = 1;
+    }
+    
+    message SolveChallengeDORequest {
+        required ChallengeDO challenge = 1;
+        optional UserDO      user      = 2;
+    }
+    
+    message SolveChallengeDOResponse {
+        required UserDO user = 1;
+    }
 
 // Message
 message MessagePayload {

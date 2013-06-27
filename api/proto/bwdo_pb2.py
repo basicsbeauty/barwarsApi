@@ -14,7 +14,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='bwdo.proto',
   package='BarWars',
-  serialized_pb='\n\nbwdo.proto\x12\x07\x42\x61rWars\"A\n\x0b\x43hallengeDO\x12\x0b\n\x03\x63id\x18\x01 \x02(\t\x12\x10\n\x08\x62\x61r_code\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"\x83\x01\n\x06UserDO\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x19\n\x11profile_image_uri\x18\x03 \x01(\t\x12\x0e\n\x06points\x18\x04 \x01(\r\x12\x14\n\x0csovled_count\x18\x05 \x01(\r\x12\x14\n\x0csubmit_count\x18\x06 \x01(\r\"_\n\x15GetDescriptionRequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\"@\n\x15GetDescriptionReponse\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\"2\n\x11GetProfileRequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"3\n\x12GetProfileResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"I\n\x18GetChallengesListRequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\"I\n\x19GetChallengesListResponse\x12,\n\x0e\x63hallenge_list\x18\x01 \x03(\x0b\x32\x14.BarWars.ChallengeDO\"7\n\x16\x43reateProfileDORequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"8\n\x17\x43reateProfileDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"b\n\x18SubmitChallengeDORequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\":\n\x19SubmitChallengeDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"a\n\x17SolveChallengeDORequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\"9\n\x18SolveChallengeDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"%\n\x0eMessagePayload\x12\x13\n\x0braw_payload\x18\x01 \x01(\x0c\"\xbf\x01\n\x07Message\x12\x12\n\x07version\x18\x01 \x02(\r:\x01\x31\x12\r\n\x02id\x18\x02 \x02(\r:\x01\x30\x12$\n\x04type\x18\x03 \x02(\x0e\x32\x16.BarWars.OperationType\x12\x14\n\ttimestamp\x18\x04 \x01(\x04:\x01\x30\x12\x13\n\x0bstatus_code\x18\x05 \x01(\x05\x12\x16\n\x0estatus_message\x18\x06 \x01(\t\x12(\n\x07payload\x18\x07 \x01(\x0b\x32\x17.BarWars.MessagePayload*\x95\x01\n\rOperationType\x12\x13\n\x0fGET_DESCRIPTION\x10\x01\x12\x0f\n\x0bGET_PROFILE\x10\x02\x12\x17\n\x13GET_CHALLENGES_LIST\x10\x03\x12\x10\n\x0cPOST_PROFILE\x10\x04\x12\x19\n\x15POST_SUBMIT_CHALLENGE\x10\x05\x12\x18\n\x14POST_SOLVE_CHALLENGE\x10\x06')
+  serialized_pb='\n\nbwdo.proto\x12\x07\x42\x61rWars\"A\n\x0b\x43hallengeDO\x12\x0b\n\x03\x63id\x18\x01 \x01(\t\x12\x10\n\x08\x62\x61r_code\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"\x83\x01\n\x06UserDO\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x19\n\x11profile_image_uri\x18\x03 \x01(\t\x12\x0e\n\x06points\x18\x04 \x01(\r\x12\x14\n\x0csolved_count\x18\x05 \x01(\r\x12\x14\n\x0csubmit_count\x18\x06 \x01(\r\"_\n\x15GetDescriptionRequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\"A\n\x16GetDescriptionResponse\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\"2\n\x11GetProfileRequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"3\n\x12GetProfileResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"I\n\x18GetChallengesListRequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\"I\n\x19GetChallengesListResponse\x12,\n\x0e\x63hallenge_list\x18\x01 \x03(\x0b\x32\x14.BarWars.ChallengeDO\"7\n\x16\x43reateProfileDORequest\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"8\n\x17\x43reateProfileDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"b\n\x18SubmitChallengeDORequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\":\n\x19SubmitChallengeDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"a\n\x17SolveChallengeDORequest\x12\'\n\tchallenge\x18\x01 \x02(\x0b\x32\x14.BarWars.ChallengeDO\x12\x1d\n\x04user\x18\x02 \x01(\x0b\x32\x0f.BarWars.UserDO\"9\n\x18SolveChallengeDOResponse\x12\x1d\n\x04user\x18\x01 \x02(\x0b\x32\x0f.BarWars.UserDO\"%\n\x0eMessagePayload\x12\x13\n\x0braw_payload\x18\x01 \x01(\x0c\"\xbf\x01\n\x07Message\x12\x12\n\x07version\x18\x01 \x02(\r:\x01\x31\x12\r\n\x02id\x18\x02 \x02(\r:\x01\x30\x12$\n\x04type\x18\x03 \x02(\x0e\x32\x16.BarWars.OperationType\x12\x14\n\ttimestamp\x18\x04 \x01(\x04:\x01\x30\x12\x13\n\x0bstatus_code\x18\x05 \x01(\x05\x12\x16\n\x0estatus_message\x18\x06 \x01(\t\x12(\n\x07payload\x18\x07 \x01(\x0b\x32\x17.BarWars.MessagePayload*\x95\x01\n\rOperationType\x12\x13\n\x0fGET_DESCRIPTION\x10\x01\x12\x0f\n\x0bGET_PROFILE\x10\x02\x12\x17\n\x13GET_CHALLENGES_LIST\x10\x03\x12\x10\n\x0cPOST_PROFILE\x10\x04\x12\x19\n\x15POST_SUBMIT_CHALLENGE\x10\x05\x12\x18\n\x14POST_SOLVE_CHALLENGE\x10\x06')
 
 _OPERATIONTYPE = _descriptor.EnumDescriptor(
   name='OperationType',
@@ -49,8 +49,8 @@ _OPERATIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1309,
-  serialized_end=1458,
+  serialized_start=1310,
+  serialized_end=1459,
 )
 
 OperationType = enum_type_wrapper.EnumTypeWrapper(_OPERATIONTYPE)
@@ -72,7 +72,7 @@ _CHALLENGEDO = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='cid', full_name='BarWars.ChallengeDO.cid', index=0,
-      number=1, type=9, cpp_type=9, label=2,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -141,7 +141,7 @@ _USERDO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='sovled_count', full_name='BarWars.UserDO.sovled_count', index=4,
+      name='solved_count', full_name='BarWars.UserDO.solved_count', index=4,
       number=5, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -203,15 +203,15 @@ _GETDESCRIPTIONREQUEST = _descriptor.Descriptor(
 )
 
 
-_GETDESCRIPTIONREPONSE = _descriptor.Descriptor(
-  name='GetDescriptionReponse',
-  full_name='BarWars.GetDescriptionReponse',
+_GETDESCRIPTIONRESPONSE = _descriptor.Descriptor(
+  name='GetDescriptionResponse',
+  full_name='BarWars.GetDescriptionResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='challenge', full_name='BarWars.GetDescriptionReponse.challenge', index=0,
+      name='challenge', full_name='BarWars.GetDescriptionResponse.challenge', index=0,
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -227,7 +227,7 @@ _GETDESCRIPTIONREPONSE = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=321,
-  serialized_end=385,
+  serialized_end=386,
 )
 
 
@@ -254,8 +254,8 @@ _GETPROFILEREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=387,
-  serialized_end=437,
+  serialized_start=388,
+  serialized_end=438,
 )
 
 
@@ -282,8 +282,8 @@ _GETPROFILERESPONSE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=439,
-  serialized_end=490,
+  serialized_start=440,
+  serialized_end=491,
 )
 
 
@@ -317,8 +317,8 @@ _GETCHALLENGESLISTREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=492,
-  serialized_end=565,
+  serialized_start=493,
+  serialized_end=566,
 )
 
 
@@ -345,8 +345,8 @@ _GETCHALLENGESLISTRESPONSE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=567,
-  serialized_end=640,
+  serialized_start=568,
+  serialized_end=641,
 )
 
 
@@ -373,8 +373,8 @@ _CREATEPROFILEDOREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=642,
-  serialized_end=697,
+  serialized_start=643,
+  serialized_end=698,
 )
 
 
@@ -401,8 +401,8 @@ _CREATEPROFILEDORESPONSE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=699,
-  serialized_end=755,
+  serialized_start=700,
+  serialized_end=756,
 )
 
 
@@ -436,8 +436,8 @@ _SUBMITCHALLENGEDOREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=757,
-  serialized_end=855,
+  serialized_start=758,
+  serialized_end=856,
 )
 
 
@@ -464,8 +464,8 @@ _SUBMITCHALLENGEDORESPONSE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=857,
-  serialized_end=915,
+  serialized_start=858,
+  serialized_end=916,
 )
 
 
@@ -499,8 +499,8 @@ _SOLVECHALLENGEDOREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=917,
-  serialized_end=1014,
+  serialized_start=918,
+  serialized_end=1015,
 )
 
 
@@ -527,8 +527,8 @@ _SOLVECHALLENGEDORESPONSE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1016,
-  serialized_end=1073,
+  serialized_start=1017,
+  serialized_end=1074,
 )
 
 
@@ -555,8 +555,8 @@ _MESSAGEPAYLOAD = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1075,
-  serialized_end=1112,
+  serialized_start=1076,
+  serialized_end=1113,
 )
 
 
@@ -625,13 +625,13 @@ _MESSAGE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1115,
-  serialized_end=1306,
+  serialized_start=1116,
+  serialized_end=1307,
 )
 
 _GETDESCRIPTIONREQUEST.fields_by_name['challenge'].message_type = _CHALLENGEDO
 _GETDESCRIPTIONREQUEST.fields_by_name['user'].message_type = _USERDO
-_GETDESCRIPTIONREPONSE.fields_by_name['challenge'].message_type = _CHALLENGEDO
+_GETDESCRIPTIONRESPONSE.fields_by_name['challenge'].message_type = _CHALLENGEDO
 _GETPROFILEREQUEST.fields_by_name['user'].message_type = _USERDO
 _GETPROFILERESPONSE.fields_by_name['user'].message_type = _USERDO
 _GETCHALLENGESLISTREQUEST.fields_by_name['user'].message_type = _USERDO
@@ -649,7 +649,7 @@ _MESSAGE.fields_by_name['payload'].message_type = _MESSAGEPAYLOAD
 DESCRIPTOR.message_types_by_name['ChallengeDO'] = _CHALLENGEDO
 DESCRIPTOR.message_types_by_name['UserDO'] = _USERDO
 DESCRIPTOR.message_types_by_name['GetDescriptionRequest'] = _GETDESCRIPTIONREQUEST
-DESCRIPTOR.message_types_by_name['GetDescriptionReponse'] = _GETDESCRIPTIONREPONSE
+DESCRIPTOR.message_types_by_name['GetDescriptionResponse'] = _GETDESCRIPTIONRESPONSE
 DESCRIPTOR.message_types_by_name['GetProfileRequest'] = _GETPROFILEREQUEST
 DESCRIPTOR.message_types_by_name['GetProfileResponse'] = _GETPROFILERESPONSE
 DESCRIPTOR.message_types_by_name['GetChallengesListRequest'] = _GETCHALLENGESLISTREQUEST
@@ -681,11 +681,11 @@ class GetDescriptionRequest(_message.Message):
 
   # @@protoc_insertion_point(class_scope:BarWars.GetDescriptionRequest)
 
-class GetDescriptionReponse(_message.Message):
+class GetDescriptionResponse(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _GETDESCRIPTIONREPONSE
+  DESCRIPTOR = _GETDESCRIPTIONRESPONSE
 
-  # @@protoc_insertion_point(class_scope:BarWars.GetDescriptionReponse)
+  # @@protoc_insertion_point(class_scope:BarWars.GetDescriptionResponse)
 
 class GetProfileRequest(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
