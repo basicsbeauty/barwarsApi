@@ -200,7 +200,6 @@ def solveChallengeDB(uuid, bar_code, cid):
   global db_cursor
 
   try:  
-
     # Challenge: Solve: Check:
     db_cursor = getDbCursor()
     column_list = 'barcode'  

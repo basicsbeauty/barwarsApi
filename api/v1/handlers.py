@@ -167,7 +167,6 @@ def processChallengePost( user_do = None, challenge_do = None):
 def processChallengeSolve( user_do = None, challenge_do = None):
     
   utils.logLine( "processChallengeSolve: BEGN")
-
   if user_do is None:
     print "user DO cannot be None"
     utils.logLine( "processChallengeSolve: Error: user DO None")
@@ -187,7 +186,7 @@ def processChallengeSolve( user_do = None, challenge_do = None):
     utils.logLine( "processChallengeSolve: Error: bar_code None")
     return None
 
-  dbResp = dbManager.solveChallengeDB(user_do.uuid, challenge_do.bar_core, challenge_do.cid)
+  dbResp = dbManager.solveChallengeDB(user_do.uuid, challenge_do.bar_code, challenge_do.cid)
   if not dbResp:
     print "Unable to solvechallenge into DB!"
     utils.logLine( "processChallengeSolve Error: Unable to solve challenge into DB!")
@@ -203,12 +202,6 @@ def processRequest(req_obj, req_type):
   utils.logLine( "Rqst: Prcs: I/p : Type: " + str(req_type) + " RQST: " + str(req_obj))
 
   res = {}
-
-  #cursor = getDBCursor()
-  #if not cursor:
-  #   res['status'] = FAILURE
-  #   res['err_msg'] = "DB Access: Failed"
-  #   return res
 
 # TODO: get response object based on request type. This involves fetching data from db and populating the proto objects
   if req_type == bwdo_pb2.GET_DESCRIPTION:
