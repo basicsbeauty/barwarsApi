@@ -83,14 +83,13 @@ def parseData( data, method = 'GET'):
     res['err_msg'] = "data field empty!"
     return res 
 
-  print "Inside parseData, data ==>>", data
+  logLine( "parseData:: raw req data: " + str(data))
   try:
-    #if method == 'GET':
     raw_data = urllib.unquote(data).decode('utf8')    
     raw_data = base64.b64decode(raw_data)
     req_msg = bwdo_pb2.Message()
     req_msg.ParseFromString(raw_data)
-    # logLine( "R Ms: " + str(req_msg));
+    logLine( "parseData:: deserialized req_msg: " + str(req_msg))
   except:
     res['status'] = FAILURE
     res['err_msg'] = "Unable to decode request message!"
@@ -207,9 +206,9 @@ def processProfilePost( db_cursor, user_do = None, challenge_do = None):
 #########################################################################
 def barcodeToDescription( upc):
 
-  print "upc : ", upc
+  logLine("upc : " + str(upc))
   cmdline = "curl http://www.upcdatabase.com/item/" + upc + " --silent | grep 'Description' | cut -c 38- | cut -d'<' -f 1"
-  print "cmdline:: ", cmdline
+  logLine("cmdline:: "+ str(cmdline))
   try: 
     result = subprocess.check_output(cmdline, shell=True)
   except subprocess.CalledProcessError:
@@ -223,13 +222,13 @@ def barcodeToDescription( upc):
 def processDescriptionGet( user_do = None, challenge_do = None):
 
   upc = challenge_do.bar_code
-  print "upc : ", upc
+  logLine("upc : " + str(upc))
   cmdline = "curl http://www.upcdatabase.com/item/" + upc + " --silent | grep 'Description' | cut -c 38- | cut -d'<' -f 1"
-  print "cmdline:: ", cmdline
+  logLine("cmdline:: "+ str(cmdline))
   try: 
     result = subprocess.check_output(cmdline, shell=True)
   except subprocess.CalledProcessError:
-    result = "";
+    result = ""
 
   if result == "":
     return None
@@ -263,7 +262,7 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
     query  = 'select ' + column_list + ' from ' + table + ' '
     query += 'where status=0 '
     
-    print "query: ", query
+    logLine("query: " + str(query))
     if user_do.uuid:
         query += 'and uuid != \'' + str(user_do.uuid) + '\' '
 
@@ -320,25 +319,25 @@ def processChallengePost( db_cursor, user_do = None, challenge_do = None):
     query  = 'insert into challenge ( barcode, description, status, uuid, time_created, time_updated)  values('
     query += '\''  + str(challenge_do.bar_code) + '\','
     query += '\''  + str(description) + '\','
-    query += str( 0) + ',';
+    query += str( 0) + ','
     query += '\''  + str(user_do.uuid) + '\','
     query += ' now(),'
     query += ' now())'
-    logLine(query);
+    logLine(query)
     db_cursor.execute( query)
     
     # User: Update: Submit_count: Increment
     table = 'user'
     query  = 'update ' + table + ' set submit_count=submit_count+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query);
+    logLine(query)
     db_cursor.execute( query)
 
     # User: Point: Count: Decrement
     table = 'user'
     query  = 'update ' + table + ' set points=points-1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query);
+    logLine(query)
     db_cursor.execute(query)
 
     db_cursor.execute( "commit")
@@ -397,14 +396,14 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
     table = 'user'
     query  = 'update ' + table + ' set solved_count=solved_count+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query);
+    logLine(query)
     db_cursor.execute(query)
 
     # User: Increment: Solved: Count:
     table = 'user'
     query  = 'update ' + table + ' set points=points+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query);
+    logLine(query)
     db_cursor.execute(query)
 
     db_cursor.execute( "commit")
