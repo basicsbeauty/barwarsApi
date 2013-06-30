@@ -3,43 +3,23 @@
 from piston.handler import BaseHandler
 from piston.utils import rc
 from proto import bwdo_pb2
+from v1 import utils
 
 import random
 import urllib 
-import subprocess
 
 import MySQLdb as db
 
 import base64
+
 #Monkey patching threading module http://stackoverflow.com/questions/13193278/understand-python-threading-bug
 import threading
 threading._DummyThread._Thread__stop = lambda x: 42
-
-REQ = 0
-RESP = 1
-
-req_types_dict = {\
-  bwdo_pb2.GET_DESCRIPTION:       (bwdo_pb2.GetDescriptionRequest, bwdo_pb2.GetDescriptionResponse), \
-  bwdo_pb2.GET_PROFILE:           (bwdo_pb2.GetProfileRequest, bwdo_pb2.GetProfileResponse), \
-  bwdo_pb2.GET_CHALLENGES_LIST:   (bwdo_pb2.GetChallengesListRequest, bwdo_pb2.GetChallengesListResponse), \
-  bwdo_pb2.POST_PROFILE:          (bwdo_pb2.CreateProfileDORequest, bwdo_pb2.CreateProfileDOResponse), \
-  bwdo_pb2.POST_SUBMIT_CHALLENGE: (bwdo_pb2.SubmitChallengeDORequest, bwdo_pb2.SubmitChallengeDOResponse), \
-  bwdo_pb2.POST_SOLVE_CHALLENGE:  (bwdo_pb2.SolveChallengeDORequest, bwdo_pb2.SolveChallengeDOResponse), \
-}
 
 SUCCESS = True
 FAILURE = False
 
 db_cursor = None
-
-#########################################################################
-# Log: Function
-#########################################################################
-def logLine( message):
-  fp_log = open( "/tmp/barwars.log", "a")
-  fp_log.write( message + "\n")
-  fp_log.close()
-  return
 
 #########################################################################
 # DB: Cursor: 
@@ -74,78 +54,30 @@ def getDBCursor():
   return db_cursor
 
 #########################################################################
-# Parse: Request 
-#########################################################################
-def parseData( data, method = 'GET'):
-  res = {}
-  if data is None or data == '':
-    res['status'] = FAILURE
-    res['err_msg'] = "data field empty!"
-    return res 
-
-  logLine( "parseData:: raw req data: " + str(data))
-  try:
-    raw_data = urllib.unquote(data).decode('utf8')    
-    raw_data = base64.b64decode(raw_data)
-    req_msg = bwdo_pb2.Message()
-    req_msg.ParseFromString(raw_data)
-    logLine( "parseData:: deserialized req_msg: " + str(req_msg))
-  except:
-    res['status'] = FAILURE
-    res['err_msg'] = "Unable to decode request message!"
-    return res
-  
-  # logLine( "Type: " + str(req_msg.type))  
-  req_type = req_msg.type
-  if req_type not in req_types_dict.keys():
-    res['status'] = FAILURE
-    res['err_msg'] = "Request type invalid!"
-    return res 
-
-  try:
-    # logLine( "R_Pa: " + str(req_msg.payload.raw_payload))
-    req_obj = req_types_dict[req_type][REQ]()
-    # logLine( "R Do: " + str(req_obj))
-    req_obj.ParseFromString( req_msg.payload.raw_payload)
-    # logLine( "Req : Obj : " + str(req_obj))
-  except bwdo_pb2.DecodeError, e:
-    res['status'] = FAILURE
-    res['err_msg'] = "Unable to decode request message!"
-    return res
-
-  res['req'] = req_obj
-  res['status'] = SUCCESS
-  res['type'] = req_type
-  res['err_msg'] = ''
-  res['req_msg_id'] = req_msg.id
-  return res
-
-#########################################################################
 # Request: Profile: Get: Process:
 #########################################################################
 def processProfileGet( db_cursor, user_do = None, challenge_do = None):
   
-  logLine( "Profile: Get: Process: BEGN: " + str(user_do))
-
+  utils.logLine( "Profile: Get: Process: BEGN: " + str(user_do))
   try:
 
-    logLine( "UUID: " + user_do.uuid)
-
-    # Query:
+    utils.logLine( "UUID: " + user_do.uuid)
     table = 'user'
     column_list = ' uuid, profile_name, points, solved_count, submit_count'
     query  = 'select ' + column_list + ' from ' + table + ' where '
   
     if user_do.uuid:
-      query += 'uuid like \'' + str(user_do.uuid) + '\' '
+      query += 'uuid =\'' + str(user_do.uuid) + '\' '
 
-    logLine( query)
+    utils.logLine( query)
     db_cursor.execute( query)            
-    
     db_record = db_cursor.fetchall()
-    logLine( "DBRs:" + str(db_record))
+    if not db_record:
+      print "Unable to retrieve user record!!"
+      return None
+    utils.logLine( "DBRs:" + str(db_record))
     db_record = db_record[0]
-    logLine( "Rs 0:" + str(db_record))
+    utils.logLine( "Rs 0:" + str(db_record))
 
     profile_response = bwdo_pb2.GetProfileResponse()
     user_do_res = profile_response.user
@@ -161,7 +93,7 @@ def processProfileGet( db_cursor, user_do = None, challenge_do = None):
     print "DB creation error: ", e
     return None
 
-  logLine( "Profile: Get: Process: DO: " + str(profile_response))
+  utils.logLine( "Profile: Get: Process: DO: " + str(profile_response))
   return profile_response.SerializeToString()
 
 #########################################################################
@@ -169,14 +101,14 @@ def processProfileGet( db_cursor, user_do = None, challenge_do = None):
 #########################################################################
 def processProfilePost( db_cursor, user_do = None, challenge_do = None):
   
-  logLine( "Profile: Post: Process: BEGN: " + str(user_do))
+  utils.logLine( "Profile: Post: Process: BEGN: " + str(user_do))
 
   profile_names = [ 'Detective', 'Discoverer', 'Hunter'] 
 
   if not user_do.uuid:
     return None
 
-  logLine( "UUID: " + str(user_do.uuid))
+  utils.logLine( "UUID: " + str(user_do.uuid))
 
   try:
 
@@ -191,7 +123,7 @@ def processProfilePost( db_cursor, user_do = None, challenge_do = None):
     query += ' now(),'
     query += ' now())'
      
-    logLine( query)
+    utils.logLine( query)
     # db_cursor.execute( query)
     # db_cursor.execute( "commit")
 
@@ -202,43 +134,20 @@ def processProfilePost( db_cursor, user_do = None, challenge_do = None):
   return processProfileGet( db_cursor, user_do)
 
 #########################################################################
-# Util: Barcode -> Description
-#########################################################################
-def barcodeToDescription( upc):
-
-  logLine("upc : " + str(upc))
-  cmdline = "curl http://www.upcdatabase.com/item/" + upc + " --silent | grep 'Description' | cut -c 38- | cut -d'<' -f 1"
-  logLine("cmdline:: "+ str(cmdline))
-  try: 
-    result = subprocess.check_output(cmdline, shell=True)
-  except subprocess.CalledProcessError:
-    result = None
-    
-  return result
-
-#########################################################################
 # Request: Description: Get: Process:
 #########################################################################
 def processDescriptionGet( user_do = None, challenge_do = None):
 
   upc = challenge_do.bar_code
-  logLine("upc : " + str(upc))
-  cmdline = "curl http://www.upcdatabase.com/item/" + upc + " --silent | grep 'Description' | cut -c 38- | cut -d'<' -f 1"
-  logLine("cmdline:: "+ str(cmdline))
-  try: 
-    result = subprocess.check_output(cmdline, shell=True)
-  except subprocess.CalledProcessError:
-    result = ""
-
+  result = utils.barcodeToDescription(upc)
   if result == "":
     return None
   else:
     description_response = bwdo_pb2.GetDescriptionResponse()
     
-    ch_do = description_response.challenge
-    
-    ch_do.bar_code = upc
-    ch_do.description = result
+  ch_do = description_response.challenge
+  ch_do.bar_code = upc
+  ch_do.description = result
   
   return description_response.SerializeToString()
 
@@ -247,14 +156,14 @@ def processDescriptionGet( user_do = None, challenge_do = None):
 #########################################################################
 def processChallengeListGet( db_cursor, user_do = None, filter = None):
     
-  logLine( "Challenge: List: Get: Process: BEGN: " + str(user_do))
+  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(user_do))
 
   if not user_do.uuid:
     return None
 
   try:
 
-    logLine( "UUID: " + user_do.uuid)
+    utils.logLine( "UUID: " + user_do.uuid)
 
     # Query:
     table = 'challenge'
@@ -262,7 +171,7 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
     query  = 'select ' + column_list + ' from ' + table + ' '
     query += 'where status=0 '
     
-    logLine("query: " + str(query))
+    utils.logLine("query: " + str(query))
     if user_do.uuid:
         query += 'and uuid != \'' + str(user_do.uuid) + '\' '
 
@@ -270,11 +179,11 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
         query += 'and description like \'%' + str(filter) + '%\' '
     
     query += 'group by description'
-    logLine( query)
+    utils.logLine( query)
     db_cursor.execute( query)
     
     db_records = db_cursor.fetchall()
-    logLine( "DBRs: " + str(db_records))
+    utils.logLine( "DBRs: " + str(db_records))
     
   except db.error, e:
     print "DB creation error: ", e
@@ -289,7 +198,7 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
       ch_do.cid = str(challenge_row[0])
       ch_do.description = challenge_row[1]                    
 
-  logLine( "Resp: " + str(ch_list_response))
+  utils.logLine( "Resp: " + str(ch_list_response))
     
   return ch_list_response.SerializeToString()
 
@@ -298,7 +207,7 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
 #########################################################################
 def processChallengePost( db_cursor, user_do = None, challenge_do = None):
     
-  logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
+  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
 
   # Input: Arguments: Validation
   if not user_do.uuid:
@@ -309,7 +218,7 @@ def processChallengePost( db_cursor, user_do = None, challenge_do = None):
   try:  
 
     # Barcode -> Description
-    description = barcodeToDescription( challenge_do.bar_code)
+    description = utils.barcodeToDescription( challenge_do.bar_code)
     if not description:
       return None
     description = description.strip()
@@ -323,21 +232,21 @@ def processChallengePost( db_cursor, user_do = None, challenge_do = None):
     query += '\''  + str(user_do.uuid) + '\','
     query += ' now(),'
     query += ' now())'
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute( query)
     
     # User: Update: Submit_count: Increment
     table = 'user'
     query  = 'update ' + table + ' set submit_count=submit_count+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute( query)
 
     # User: Point: Count: Decrement
     table = 'user'
     query  = 'update ' + table + ' set points=points-1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute(query)
 
     db_cursor.execute( "commit")
@@ -355,7 +264,7 @@ SOLVED = 1
 UNSOLVED = 0
 def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
     
-  logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
+  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
 
   # Input: Arguments: Validation
   if not user_do.uuid:
@@ -377,7 +286,7 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
     query += ' and ' + where_clause_not_post_by_current_user
     query += ' and cid = ' + challenge_do.cid
     query += ' and barcode = \'' + str(challenge_do.bar_code) + '\' '
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute(query)
   
     # Failure: If there no match
@@ -389,21 +298,21 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
     table  = 'challenge'
     print "Solve challenge, going to run update==> ", challenge_do
     query  = 'update ' + table + ' set status=1 where cid=' + str(challenge_do.cid)
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute(query)
   
     # User: Increment: Solved: Count:
     table = 'user'
     query  = 'update ' + table + ' set solved_count=solved_count+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute(query)
 
     # User: Increment: Solved: Count:
     table = 'user'
     query  = 'update ' + table + ' set points=points+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
-    logLine(query)
+    utils.logLine(query)
     db_cursor.execute(query)
 
     db_cursor.execute( "commit")
@@ -419,7 +328,7 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
 #########################################################################
 def processRequest(req_obj, req_type):
 
-  logLine( "Rqst: Prcs: I/p : Type: " + str(req_type) + " RQST: " + str(req_obj))
+  utils.logLine( "Rqst: Prcs: I/p : Type: " + str(req_type) + " RQST: " + str(req_obj))
 
   res = {}
 
@@ -430,8 +339,11 @@ def processRequest(req_obj, req_type):
      return res
 
 # TODO: get response object based on request type. This involves fetching data from db and populating the proto objects
+  print "00001"
   if req_type == bwdo_pb2.GET_DESCRIPTION:
+      print "00002"
       res['r_payload'] = processDescriptionGet( challenge_do = req_obj.challenge)
+      print "00003"
   if req_type == bwdo_pb2.GET_PROFILE:
       res['r_payload'] = processProfileGet( cursor, user_do = req_obj.user)
   if req_type == bwdo_pb2.GET_CHALLENGES_LIST:
@@ -446,30 +358,7 @@ def processRequest(req_obj, req_type):
   res['status'] = SUCCESS
   return res
   
-#########################################################################
-# Output: Message: Generate 
-#########################################################################
-def generateResponse(raw_data, msg_id, req_type):
-  
-  message = bwdo_pb2.Message()
-  message.version = 1
-  message.id = msg_id
-  message.type = req_type
-  message.status_code = 0
-  message.payload.raw_payload = raw_data
-  return message
-
-#########################################################################
-# Output: Message: Error Message
-#########################################################################
-def sendErrResp( err_msg):
-  resp = rc.BAD_REQUEST
-  resp['Content-Type'] = 'text/json'
-  respDict = {"message": err_msg}
-  resp.content = respDict
-  return resp
-
-#########################################################################
+########################################################################
 # Input: Message: handler
 #########################################################################
 class RequestHandler(BaseHandler):
@@ -481,9 +370,9 @@ class RequestHandler(BaseHandler):
     ##############################################
     # Request: Parse
     ##############################################            
-    parsed_data = parseData(data)
+    parsed_data = utils.parseData(data)
     if parsed_data['status'] == FAILURE:
-        return sendErrResp(parsed_data['err_msg'])
+        return utils.sendErrResp(parsed_data['err_msg'])
     
     ##############################################
     # Request: Process
@@ -491,17 +380,18 @@ class RequestHandler(BaseHandler):
     resp_raw = processRequest(parsed_data['req'], parsed_data['type'])
     # logLine( "RaRs: " + str(resp_raw))
     if resp_raw['status'] == FAILURE:
-        return sendErrResp(resp_raw['err_msg'])  
+        return utils.sendErrResp(resp_raw['err_msg'])  
 
     ##############################################
     # Response: Construct
     ##############################################	   
     # logLine( "Pars: " + str(resp_raw))
-    resp_msg = generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
+    resp_msg = utils.generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
 
     ##############################################
     # Response: Pack & Send
     ##############################################           
+
     resp = rc.ALL_OK
     resp['Content-Type'] = 'text/json'
     respDict = {"data": base64.b64encode(resp_msg.SerializeToString())}
@@ -511,18 +401,19 @@ class RequestHandler(BaseHandler):
   def create(self, request, test=None):
     
     data = request.POST['data']    
-    logLine( "POST: Data: " + str(data))
+    utils.logLine( "POST: Data: " + str(data))
     
-    parsed_data = parseData( data, 'POST')
+    parsed_data = utils.parseData( data, 'POST')
     if parsed_data['status'] == FAILURE:
-        return sendErrResp(parsed_data['err_msg'])
-    logLine( "PrDa: " + str(parsed_data))
+        return utils.sendErrResp(parsed_data['err_msg'])
+    utils.logLine( "PrDa: " + str(parsed_data))
           
     resp_raw = processRequest( parsed_data['req'], parsed_data['type'])
     if resp_raw['status'] == FAILURE:
-        return sendErrResp(resp_raw['err_msg'])  
-   
-    resp_msg = generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
+        return utils.sendErrResp(resp_raw['err_msg'])  
+    if resp_raw['r_payload'] is None:
+        return utils.sendErrResp("Unable to process request")
+    resp_msg = utils.generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
     resp = rc.ALL_OK
     resp['Content-Type'] = 'text/json'
     respDict = {"data": base64.b64encode(resp_msg.SerializeToString())}
