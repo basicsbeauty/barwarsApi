@@ -4,11 +4,10 @@ from piston.handler import BaseHandler
 from piston.utils import rc
 from proto import bwdo_pb2
 from v1 import utils
-
+from v1 import dbManager
 import random
 import urllib 
 
-import MySQLdb as db
 
 import base64
 
@@ -19,128 +18,70 @@ threading._DummyThread._Thread__stop = lambda x: 42
 SUCCESS = True
 FAILURE = False
 
-db_cursor = None
-
-#########################################################################
-# DB: Cursor: 
-#########################################################################
-def getDBCursor():
-
-  global db_cursor
-
-  if db_cursor:
-    return db_cursor
-
-  try:
-    # DB: Connection: Create
-    host = 'localhost'
-    user = 'u_barwars'
-    password = 'barwars'
-    database = 'db_barwars'
-    db_con = db.connect( host, user, password, database)
-    
-    # DB: Init: Success
-    db_init_flag = True
-    
-    # DB: Cursor:
-    db_cursor = db_con.cursor()
-    
-    # logLine( "DB: Connection: Create: Success:")
-
-  except db.error, e:
-    db_cursor = None
-    print "DB creation error: ", e
-
-  return db_cursor
-
 #########################################################################
 # Request: Profile: Get: Process:
 #########################################################################
-def processProfileGet( db_cursor, user_do = None, challenge_do = None):
+def processProfileGet( user_do = None, challenge_do = None):
   
-  utils.logLine( "Profile: Get: Process: BEGN: " + str(user_do))
-  try:
+  utils.logLine( "processProfileGet: BEGIN: " + str(user_do))
 
-    utils.logLine( "UUID: " + user_do.uuid)
-    table = 'user'
-    column_list = ' uuid, profile_name, points, solved_count, submit_count'
-    query  = 'select ' + column_list + ' from ' + table + ' where '
-  
-    if user_do.uuid:
-      query += 'uuid =\'' + str(user_do.uuid) + '\' '
-
-    utils.logLine( query)
-    db_cursor.execute( query)            
-    db_record = db_cursor.fetchall()
-    if not db_record:
-      print "Unable to retrieve user record!!"
-      return None
-    utils.logLine( "DBRs:" + str(db_record))
-    db_record = db_record[0]
-    utils.logLine( "Rs 0:" + str(db_record))
-
-    profile_response = bwdo_pb2.GetProfileResponse()
-    user_do_res = profile_response.user
-    
-    user_do_res.uuid = str(db_record[0])
-    user_do_res.display_name = str(db_record[1])
-
-    user_do_res.points = int(db_record[2])
-    user_do_res.solved_count = int(db_record[3])
-    user_do_res.submit_count = int(db_record[4])
-
-  except db.error, e:
-    print "DB creation error: ", e
+  if user_do is None:
+    print "user DO cannot be None"
+    utils.logLine( "processProfileGet: Error: user DO None")
     return None
 
-  utils.logLine( "Profile: Get: Process: DO: " + str(profile_response))
+  userProfileData = dbManager.getProfileDataDB(user_do.uuid)
+  if userProfileData is None:
+    print "Unable to fetch user profile"
+    utils.logLine( "processProfileGet: Error: unable to fetch user profile")
+    return None
+
+  profile_response = bwdo_pb2.GetProfileResponse()
+  user_do_res = profile_response.user
+    
+  user_do_res.uuid = str(userProfileData[dbManager.UserTblCol['uuid']])
+  user_do_res.display_name = str(userProfileData[dbManager.UserTblCol['profile_name']])
+  user_do_res.points = int(userProfileData[dbManager.UserTblCol['points']])
+  user_do_res.solved_count = int(userProfileData[dbManager.UserTblCol['solved_count']])
+  user_do_res.submit_count = int(userProfileData[dbManager.UserTblCol['submit_count']])
+
+  utils.logLine( "processProfileGet: DONE: " + str(profile_response))
   return profile_response.SerializeToString()
 
 #########################################################################
 # Request: Profile: Post(Add): Process:
 #########################################################################
-def processProfilePost( db_cursor, user_do = None, challenge_do = None):
+def processProfilePost( user_do = None, challenge_do = None):
   
-  utils.logLine( "Profile: Post: Process: BEGN: " + str(user_do))
-
-  profile_names = [ 'Detective', 'Discoverer', 'Hunter'] 
-
-  if not user_do.uuid:
+  utils.logLine( "processProfilePost: BEGN: " + str(user_do))
+  if user_do is None:
+    print "user DO cannot be None"
+    utils.logLine( "processProfilePost: Error: user DO None")
     return None
 
-  utils.logLine( "UUID: " + str(user_do.uuid))
-
-  try:
-
-    # Query:
-    table = 'user'
-    query  = 'insert into ' + table + ' values( '
-    query += '\''  + str(user_do.uuid) + '\','
-    query += '\''  + profile_names[ random.randint( 0, 2)] + '\','
-    query += ' 128,'
-    query += ' 0,'
-    query += ' 0,'
-    query += ' now(),'
-    query += ' now())'
-     
-    utils.logLine( query)
-    # db_cursor.execute( query)
-    # db_cursor.execute( "commit")
-
-  except db.error, e:
-    print "DB creation error: ", e
+  dbResp = dbManager.postProfileDataDB(user_do.uuid)
+  if not dbResp:
+    print "user DO cannot be None"
+    utils.logLine( "processProfilePost: Error: DB operation failed")
     return None
-
-  return processProfileGet( db_cursor, user_do)
+  
+  utils.logLine( "processProfilePost: DONE")
+  return processProfileGet(user_do)
 
 #########################################################################
 # Request: Description: Get: Process:
 #########################################################################
 def processDescriptionGet( user_do = None, challenge_do = None):
 
+  utils.logLine("processDescriptionGet: BEGN: " + str(user_do))
+  if user_do is None:
+    print "user DO None"
+    utils.logLine( "processDescriptionGet : user DO None")
   upc = challenge_do.bar_code
   result = utils.barcodeToDescription(upc)
   if result == "":
+    utils.logLine("processDescriptionGet: unable to get barcode description")
+    print "processDescriptionGet: unable to get barcode description"
     return None
   else:
     description_response = bwdo_pb2.GetDescriptionResponse()
@@ -149,57 +90,39 @@ def processDescriptionGet( user_do = None, challenge_do = None):
   ch_do.bar_code = upc
   ch_do.description = result
   
+  utils.logLine("processDescriptionGet: DONE ")
   return description_response.SerializeToString()
 
 #########################################################################
 # Request: Challenge: Get: Process:
 #########################################################################
-def processChallengeListGet( db_cursor, user_do = None, filter = None):
+def processChallengeListGet( user_do = None, filter = None):
     
-  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(user_do))
-
-  if not user_do.uuid:
+  utils.logLine( "processChallengeListGet: BEGN: " + str(user_do))
+  if user_do is None:
+    print "user DO cannot be None"
+    utils.logLine( "processChallengeListGet Error: user DO None")
     return None
 
-  try:
-
-    utils.logLine( "UUID: " + user_do.uuid)
-
-    # Query:
-    table = 'challenge'
-    column_list = ' cid, description'
-    query  = 'select ' + column_list + ' from ' + table + ' '
-    query += 'where status=0 '
-    
-    utils.logLine("query: " + str(query))
-    if user_do.uuid:
-        query += 'and uuid != \'' + str(user_do.uuid) + '\' '
-
-    if filter:
-        query += 'and description like \'%' + str(filter) + '%\' '
-    
-    query += 'group by description'
-    utils.logLine( query)
-    db_cursor.execute( query)
-    
-    db_records = db_cursor.fetchall()
-    utils.logLine( "DBRs: " + str(db_records))
-    
-  except db.error, e:
-    print "DB creation error: ", e
+  challengeListData = dbManager.getChallengesListDB(user_do.uuid, filter = filter)
+  if challengeListData is None: 
+    print "No challenge list found in DB!"
+    utils.logLine( "processChallengeListGet Error: No challenge list found in DB!")
     return None
 
   # DB Records -> GetGetChallengesListResponse
+  print "55511111 == > ", str(user_do)
+  print "d1 ==> ", str(dbManager.ChallengeTblCol['cid'])
+  print "d1 ==> ", str(dbManager.ChallengeTblCol['description'])
+
   ch_list_response = bwdo_pb2.GetChallengesListResponse()
-
-  for challenge_row in db_records:
-
+  for challenge_row in challengeListData:
       ch_do = ch_list_response.challenge_list.add()
-      ch_do.cid = str(challenge_row[0])
-      ch_do.description = challenge_row[1]                    
+      ch_do.cid = str(challenge_row[dbManager.ChallengeTblCol['cid']])
+      ch_do.description = str(challenge_row[dbManager.ChallengeTblCol['description']])
 
-  utils.logLine( "Resp: " + str(ch_list_response))
     
+  utils.logLine( "processChallengeListGet DONE: challenges list: " + str(ch_list_response))
   return ch_list_response.SerializeToString()
 
 #########################################################################
@@ -332,28 +255,25 @@ def processRequest(req_obj, req_type):
 
   res = {}
 
-  cursor = getDBCursor()
-  if not cursor:
-     res['status'] = FAILURE
-     res['err_msg'] = "DB Access: Failed"
-     return res
+  #cursor = getDBCursor()
+  #if not cursor:
+  #   res['status'] = FAILURE
+  #   res['err_msg'] = "DB Access: Failed"
+  #   return res
 
 # TODO: get response object based on request type. This involves fetching data from db and populating the proto objects
-  print "00001"
   if req_type == bwdo_pb2.GET_DESCRIPTION:
-      print "00002"
-      res['r_payload'] = processDescriptionGet( challenge_do = req_obj.challenge)
-      print "00003"
+      res['r_payload'] = processDescriptionGet(challenge_do = req_obj.challenge)
   if req_type == bwdo_pb2.GET_PROFILE:
-      res['r_payload'] = processProfileGet( cursor, user_do = req_obj.user)
+      res['r_payload'] = processProfileGet(user_do = req_obj.user)
   if req_type == bwdo_pb2.GET_CHALLENGES_LIST:
-      res['r_payload'] = processChallengeListGet( cursor, req_obj.user, req_obj.filter)
+      res['r_payload'] = processChallengeListGet(req_obj.user, req_obj.filter)
   if req_type == bwdo_pb2.POST_PROFILE:
-      res['r_payload'] = processProfilePost( cursor, req_obj.user)
+      res['r_payload'] = processProfilePost(req_obj.user)
   if req_type == bwdo_pb2.POST_SUBMIT_CHALLENGE:
-      res['r_payload'] = processChallengePost( cursor, req_obj.user, req_obj.challenge)
+      res['r_payload'] = processChallengePost(req_obj.user, req_obj.challenge)
   if req_type == bwdo_pb2.POST_SOLVE_CHALLENGE:
-      res['r_payload'] = processChallengeSolve( cursor, req_obj.user, req_obj.challenge)
+      res['r_payload'] = processChallengeSolve(req_obj.user, req_obj.challenge)
  
   res['status'] = SUCCESS
   return res
@@ -371,9 +291,11 @@ class RequestHandler(BaseHandler):
     # Request: Parse
     ##############################################            
     parsed_data = utils.parseData(data)
+    print "00"
     if parsed_data['status'] == FAILURE:
         return utils.sendErrResp(parsed_data['err_msg'])
     
+    print "01"
     ##############################################
     # Request: Process
     ##############################################            
@@ -382,6 +304,7 @@ class RequestHandler(BaseHandler):
     if resp_raw['status'] == FAILURE:
         return utils.sendErrResp(resp_raw['err_msg'])  
 
+    print "02"
     ##############################################
     # Response: Construct
     ##############################################	   
@@ -412,6 +335,7 @@ class RequestHandler(BaseHandler):
     if resp_raw['status'] == FAILURE:
         return utils.sendErrResp(resp_raw['err_msg'])  
     if resp_raw['r_payload'] is None:
+        print "here..."
         return utils.sendErrResp("Unable to process request")
     resp_msg = utils.generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
     resp = rc.ALL_OK

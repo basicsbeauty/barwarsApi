@@ -67,7 +67,7 @@ def parseData( data, method = 'GET'):
     res['err_msg'] = "Unable to decode request message!"
     return res
 
-  print "DONE"
+  print "DONE - Successfully Parsed Request"
   res['req'] = req_obj
   res['status'] = SUCCESS
   res['type'] = req_type
