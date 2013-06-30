@@ -110,141 +110,91 @@ def processChallengeListGet( user_do = None, filter = None):
     utils.logLine( "processChallengeListGet Error: No challenge list found in DB!")
     return None
 
-  # DB Records -> GetGetChallengesListResponse
-  print "55511111 == > ", str(user_do)
-  print "d1 ==> ", str(dbManager.ChallengeTblCol['cid'])
-  print "d1 ==> ", str(dbManager.ChallengeTblCol['description'])
-
   ch_list_response = bwdo_pb2.GetChallengesListResponse()
   for challenge_row in challengeListData:
       ch_do = ch_list_response.challenge_list.add()
       ch_do.cid = str(challenge_row[dbManager.ChallengeTblCol['cid']])
       ch_do.description = str(challenge_row[dbManager.ChallengeTblCol['description']])
 
-    
   utils.logLine( "processChallengeListGet DONE: challenges list: " + str(ch_list_response))
   return ch_list_response.SerializeToString()
 
 #########################################################################
 # Request: Challenge: Post(Add): Process:
 #########################################################################
-def processChallengePost( db_cursor, user_do = None, challenge_do = None):
+def processChallengePost( user_do = None, challenge_do = None):
     
-  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
+  utils.logLine( "processChallengePost: BEGN ")
 
+  if user_do is None:
+    print "user DO cannot be None"
+    utils.logLine( "processChallengePost Error: user DO None")
+    return None
+
+  if challenge_do is None:
+    print "challenge DO cannot be None"
+    utils.logLine( "processChallengePost Error: challenge DO None")
+    return None
   # Input: Arguments: Validation
   if not user_do.uuid:
+    print "uuid cannot be None"
+    utils.logLine( "processChallengePost Error: uuid None")
     return None
   if not challenge_do.bar_code:
+    print "uuid cannot be None"
+    utils.logLine( "processChallengePost Error: bar_code None")
     return None
 
-  try:  
-
-    # Barcode -> Description
-    description = utils.barcodeToDescription( challenge_do.bar_code)
-    if not description:
-      return None
-    description = description.strip()
-    
-    # Challenge: Add: Query:
-    table  = 'challenge'
-    query  = 'insert into challenge ( barcode, description, status, uuid, time_created, time_updated)  values('
-    query += '\''  + str(challenge_do.bar_code) + '\','
-    query += '\''  + str(description) + '\','
-    query += str( 0) + ','
-    query += '\''  + str(user_do.uuid) + '\','
-    query += ' now(),'
-    query += ' now())'
-    utils.logLine(query)
-    db_cursor.execute( query)
-    
-    # User: Update: Submit_count: Increment
-    table = 'user'
-    query  = 'update ' + table + ' set submit_count=submit_count+1 where' 
-    query += ' uuid=\''  + str(user_do.uuid) + '\''
-    utils.logLine(query)
-    db_cursor.execute( query)
-
-    # User: Point: Count: Decrement
-    table = 'user'
-    query  = 'update ' + table + ' set points=points-1 where' 
-    query += ' uuid=\''  + str(user_do.uuid) + '\''
-    utils.logLine(query)
-    db_cursor.execute(query)
-
-    db_cursor.execute( "commit")
-    
-  except db.error, e:
-    print "DB creation error: ", e
+  # Barcode -> Description
+  description = utils.barcodeToDescription(challenge_do.bar_code)
+  if not description:
+    print "barcode description NOT found!"
+    utils.logLine( "processChallengePost Error: barcode description NOT found!")
     return None
+  description = description.strip()
     
-  return processProfileGet( db_cursor, user_do)
+  dbResp = postChallengeDB(user_do.uuid, challenge_do.bar_code, description)
+  if not dbResp:
+    print "Unable to submit challenge into DB!"
+    utils.logLine( "processChallengePost Error: Unable to submit challenge into DB!")
+    return None
+
+  utils.logLine( "processChallengePost: DONE ")
+  return processProfileGet(user_do)
 
 #########################################################################
 # Request: Challenge: Post(Add): Process:
 #########################################################################
-SOLVED = 1
-UNSOLVED = 0
-def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
+def processChallengeSolve( user_do = None, challenge_do = None):
     
-  utils.logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
+  utils.logLine( "processChallengeSolve: BEGN")
 
+  if user_do is None:
+    print "user DO cannot be None"
+    utils.logLine( "processChallengeSolve: Error: user DO None")
+    return None
+
+  if challenge_do is None:
+    print "challenge DO cannot be None"
+    utils.logLine( "processChallengeSolve: Error: challenge DO None")
+    return None
   # Input: Arguments: Validation
   if not user_do.uuid:
+    print "uuid cannot be None"
+    utils.logLine( "processChallengeSolve: Error: uuid None")
     return None
-  if not challenge_do.cid and challenge_do.bar_code:
+  if not challenge_do.bar_code:
+    print "uuid cannot be None"
+    utils.logLine( "processChallengeSolve: Error: bar_code None")
     return None
 
-  try:  
-
-    # Challenge: Solve: Check:
-    table  = 'challenge'
-    print "Solve challenge==>> ", challenge_do
-    column_list = 'barcode'  
-    where_clause_unsolved_challenges = 'status=0'
-    where_clause_not_post_by_current_user = ' uuid !=  \'' + user_do.uuid + '\''
-  
-    query  = 'select ' + column_list + ' from ' + table + ' where '
-    query += where_clause_unsolved_challenges
-    query += ' and ' + where_clause_not_post_by_current_user
-    query += ' and cid = ' + challenge_do.cid
-    query += ' and barcode = \'' + str(challenge_do.bar_code) + '\' '
-    utils.logLine(query)
-    db_cursor.execute(query)
-  
-    # Failure: If there no match
-    if not db_cursor.fetchone():
-      print "Solve challenge==>, NO match found!!!, query was :: ", query
-      return processProfileGet( db_cursor, user_do)
-  
-    # Challenge: Solve: Mark: Solved
-    table  = 'challenge'
-    print "Solve challenge, going to run update==> ", challenge_do
-    query  = 'update ' + table + ' set status=1 where cid=' + str(challenge_do.cid)
-    utils.logLine(query)
-    db_cursor.execute(query)
-  
-    # User: Increment: Solved: Count:
-    table = 'user'
-    query  = 'update ' + table + ' set solved_count=solved_count+1 where' 
-    query += ' uuid=\''  + str(user_do.uuid) + '\''
-    utils.logLine(query)
-    db_cursor.execute(query)
-
-    # User: Increment: Solved: Count:
-    table = 'user'
-    query  = 'update ' + table + ' set points=points+1 where' 
-    query += ' uuid=\''  + str(user_do.uuid) + '\''
-    utils.logLine(query)
-    db_cursor.execute(query)
-
-    db_cursor.execute( "commit")
-    
-  except db.error, e:
-    print "DB creation error: ", e
+  dbResp = solveChallengeDB(user_do.uuid, challenge_do.bar_core, challenge_do.cid)
+  if not dbResp:
+    print "Unable to solvechallenge into DB!"
+    utils.logLine( "processChallengeSolve Error: Unable to solve challenge into DB!")
     return None
     
-  return processProfileGet( db_cursor, user_do)
+  return processProfileGet(user_do)
 
 #########################################################################
 # Request: Process: Global 

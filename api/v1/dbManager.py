@@ -31,6 +31,9 @@ dflt_points = 128
 dflt_solved_count = 0
 dflt_submit_count = 0
 
+UNSOLVED = 0
+SOLVED   = 1
+
 #########################################################################
 # DB: Cursor: 
 #########################################################################
@@ -151,3 +154,90 @@ def getChallengesListDB(uuid, filter = None):
   return db_records
 
 
+def postChallengeDB(uuid, bar_code, description):
+
+  global db_con
+  global db_cursor
+
+  if uuid is None or bar_code is None or description is None:
+    print "Invalid input to postChallengeDb"
+    utils.logLine("Invalid input to postChallengeDb")
+    return False
+
+  try:  
+    # Challenge: Add: Query:
+    db_cursor = getDbCursor()
+    query  = 'insert into ' + ChallengeTblName + '( barcode, description, status, uuid, time_created, time_updated)  values('
+    query += '\''  + db_con.escape_string(str(bar_code)) + '\',' + '\'' +\
+                     db_con.escape_string(str(description)) + '\',' +\
+                     str(UNSOLVED) + ',' + '\''  +\
+                     db_con.escape_string(str(uuid)) + '\',' + ' now(),' + ' now())'
+    utils.logLine(query)
+    db_cursor.execute(query)
+    
+    # User: Update: Submit_count: Increment
+    # User: Point: Count: Decrement
+    table = 'user'
+    query  = 'update ' + UserTblName +\
+               ' set submit_count=submit_count+1, ' +\
+               ' points=points-1 where' +\
+               ' uuid=\''  + db_con.escape_string(str(uuid)) + '\''
+    utils.logLine(query)
+    db_cursor.execute( query)
+
+    db_cursor.execute( "commit")
+    return True
+  except db.Error, e:
+    print "DB update/insert error: ", e
+    return False 
+ 
+
+def solveChallengeDB(uuid, bar_code, cid):
+
+  global db_con
+  global db_cursor
+
+  try:  
+
+    # Challenge: Solve: Check:
+    db_cursor = getDbCursor()
+    column_list = 'barcode'  
+    where_clause_unsolved_challenges = 'status=' + str(UNSOLVED)
+    where_clause_not_post_by_current_user = ' uuid !=  \'' +\
+      db_con.escape_string(str(uuid)) + '\''
+  
+    query  = 'select ' + column_list + ' from ' + ChallengeTblName + ' where '
+    query += where_clause_unsolved_challenges
+    query += ' and ' + where_clause_not_post_by_current_user
+    query += ' and cid = ' + db_con.escape_string(str(cid))
+    query += ' and barcode = \'' + db_con.escape_string(str(bar_code)) + '\' '
+    utils.logLine(query)
+    db_cursor.execute(query)
+  
+    # Failure: If there no match
+    if not db_cursor.fetchone():
+      print "Solve challenge==>, NO match found!!!, query was :: ", query
+      return False
+  
+    # Challenge: Solve: Mark: Solved
+    print "Solve challenge, going to run update==> "
+    query  = 'update ' + ChallengeTblName + ' set status=' + str(SOLVED) +\
+               ' where cid=' + db_con.escape_string(str(cid)) 
+    utils.logLine(query)
+    db_cursor.execute(query)
+  
+    # User: Increment: Solved: Count:
+    # User: Increment: Solved: Count:
+    query  = 'update ' + UserTblName +\
+               ' set solved_count=solved_count+1, ' +\
+               ' points=points+1 where uuid=\''  +\
+               db_con.escape_string(uuid) + '\''
+    utils.logLine(query)
+    db_cursor.execute(query)
+
+    db_cursor.execute( "commit")
+    return True
+  except db.Error, e:
+    print "DB solve challenge error: ", e
+    return False
+ 
