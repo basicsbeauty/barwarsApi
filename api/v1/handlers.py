@@ -5,6 +5,7 @@ from piston.utils import rc
 from proto import bwdo_pb2
 
 import random
+import urllib 
 import subprocess
 
 import MySQLdb as db
@@ -75,7 +76,7 @@ def getDBCursor():
 #########################################################################
 # Parse: Request 
 #########################################################################
-def parseData(data):
+def parseData( data, method = 'GET'):
   res = {}
   if data is None or data == '':
     res['status'] = FAILURE
@@ -83,6 +84,8 @@ def parseData(data):
     return res 
 
   try:
+    if method == 'GET':
+      raw_data = urllib.unquote(data).decode('utf8')    
     raw_data = base64.b64decode(data)
     req_msg = bwdo_pb2.Message()
     req_msg.ParseFromString(raw_data)
@@ -321,12 +324,20 @@ def processChallengePost( db_cursor, user_do = None, challenge_do = None):
     logLine(query);
     db_cursor.execute( query)
     
-    # User: Update: Query:
+    # User: Update: Submit_count: Increment
     table = 'user'
     query  = 'update ' + table + ' set submit_count=submit_count+1 where' 
     query += ' uuid=\''  + str(user_do.uuid) + '\''
     logLine(query);
     db_cursor.execute( query)
+
+    # User: Point: Count: Decrement
+    table = 'user'
+    query  = 'update ' + table + ' set points=points-1 where' 
+    query += ' uuid=\''  + str(user_do.uuid) + '\''
+    logLine(query);
+    db_cursor.execute(query)
+
     db_cursor.execute( "commit")
     
   except db.error, e:
@@ -335,6 +346,68 @@ def processChallengePost( db_cursor, user_do = None, challenge_do = None):
     
   return processProfileGet( db_cursor, user_do)
 
+#########################################################################
+# Request: Challenge: Post(Add): Process:
+#########################################################################
+SOLVED = 1
+UNSOLVED = 0
+def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
+    
+  logLine( "Challenge: List: Get: Process: BEGN: " + str(challenge_do.bar_code))
+
+  # Input: Arguments: Validation
+  if not user_do.uuid:
+    return None
+  if not challenge_do.cid and challenge_do.bar_code:
+    return None
+
+  try:  
+
+    # Challenge: Solve: Check:
+    table  = 'challenge'
+    column_list = 'barcode'  
+    where_clause_unsolved_challenges = 'status=0'
+    where_clause_not_post_by_current_user = ' uuid !=  \'' + user_do.uuid + '\''
+  
+    query  = 'select ' + column_list + ' from ' + table + ' where '
+    query += where_clause_unsolved_challenges
+    query += ' and ' + where_clause_not_post_by_current_user
+    query += ' and cid = ' + challenge_do.cid
+    query += ' and barcode like \'' + str(challenge_do.bar_code) + '\' '
+    logLine(query)
+    db_cursor.execute(query)
+  
+    # Failure: If there no match
+    if not db_cursor.fetchone():
+      return processProfileGet( db_cursor, user_do)
+  
+    # Challenge: Solve: Mark: Solved
+    table  = 'challenge'
+    query  = 'update ' + table + ' set status=1 where cid=' + str(challenge_do.cid)
+    logLine(query)
+    db_cursor.execute(query)
+  
+    # User: Increment: Solved: Count:
+    table = 'user'
+    query  = 'update ' + table + ' set solved_count=solved_count+1 where' 
+    query += ' uuid=\''  + str(user_do.uuid) + '\''
+    logLine(query);
+    db_cursor.execute(query)
+
+    # User: Increment: Solved: Count:
+    table = 'user'
+    query  = 'update ' + table + ' set points=points+1 where' 
+    query += ' uuid=\''  + str(user_do.uuid) + '\''
+    logLine(query);
+    db_cursor.execute(query)
+
+    db_cursor.execute( "commit")
+    
+  except db.error, e:
+    print "DB creation error: ", e
+    return None
+    
+  return processProfileGet( db_cursor, user_do)
 
 #########################################################################
 # Request: Process: Global 
@@ -363,8 +436,7 @@ def processRequest(req_obj, req_type):
   if req_type == bwdo_pb2.POST_SUBMIT_CHALLENGE:
       res['r_payload'] = processChallengePost( cursor, req_obj.user, req_obj.challenge)
   if req_type == bwdo_pb2.POST_SOLVE_CHALLENGE:
-      res['user'] = req_obj.user
-      res['challenge'] = req_obj.challenge
+      res['r_payload'] = processChallengeSolve( cursor, req_obj.user, req_obj.challenge)
  
   res['status'] = SUCCESS
   return res
@@ -436,7 +508,7 @@ class RequestHandler(BaseHandler):
     data = request.POST['data']    
     logLine( "POST: Data: " + str(data))
     
-    parsed_data = parseData(data)
+    parsed_data = parseData( data, 'POST')
     if parsed_data['status'] == FAILURE:
         return sendErrResp(parsed_data['err_msg'])
     logLine( "PrDa: " + str(parsed_data))
