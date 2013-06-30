@@ -83,10 +83,11 @@ def parseData( data, method = 'GET'):
     res['err_msg'] = "data field empty!"
     return res 
 
+  print "Inside parseData, data ==>>", data
   try:
-    if method == 'GET':
-      raw_data = urllib.unquote(data).decode('utf8')    
-    raw_data = base64.b64decode(data)
+    #if method == 'GET':
+    raw_data = urllib.unquote(data).decode('utf8')    
+    raw_data = base64.b64decode(raw_data)
     req_msg = bwdo_pb2.Message()
     req_msg.ParseFromString(raw_data)
     # logLine( "R Ms: " + str(req_msg));
@@ -262,12 +263,14 @@ def processChallengeListGet( db_cursor, user_do = None, filter = None):
     query  = 'select ' + column_list + ' from ' + table + ' '
     query += 'where status=0 '
     
+    print "query: ", query
     if user_do.uuid:
         query += 'and uuid != \'' + str(user_do.uuid) + '\' '
 
     if filter:
         query += 'and description like \'%' + str(filter) + '%\' '
     
+    query += 'group by description'
     logLine( query)
     db_cursor.execute( query)
     
@@ -365,6 +368,7 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
 
     # Challenge: Solve: Check:
     table  = 'challenge'
+    print "Solve challenge==>> ", challenge_do
     column_list = 'barcode'  
     where_clause_unsolved_challenges = 'status=0'
     where_clause_not_post_by_current_user = ' uuid !=  \'' + user_do.uuid + '\''
@@ -373,16 +377,18 @@ def processChallengeSolve( db_cursor, user_do = None, challenge_do = None):
     query += where_clause_unsolved_challenges
     query += ' and ' + where_clause_not_post_by_current_user
     query += ' and cid = ' + challenge_do.cid
-    query += ' and barcode like \'' + str(challenge_do.bar_code) + '\' '
+    query += ' and barcode = \'' + str(challenge_do.bar_code) + '\' '
     logLine(query)
     db_cursor.execute(query)
   
     # Failure: If there no match
     if not db_cursor.fetchone():
+      print "Solve challenge==>, NO match found!!!, query was :: ", query
       return processProfileGet( db_cursor, user_do)
   
     # Challenge: Solve: Mark: Solved
     table  = 'challenge'
+    print "Solve challenge, going to run update==> ", challenge_do
     query  = 'update ' + table + ' set status=1 where cid=' + str(challenge_do.cid)
     logLine(query)
     db_cursor.execute(query)
