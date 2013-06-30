@@ -44,26 +44,22 @@ def getDbCursor():
   global db_con
   #print "3==>", str(db_cursor)
   if db_cursor:
-    print "3"
     return db_cursor
 
   try:
     # DB: Connection: Create
-    print "31"
     db_con = db.connect( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
-    print "32"
+    db_con.autoCommit(True)
     
     # DB: Init: Success
     db_init_flag = True
     
     # DB: Cursor:
     db_cursor = db_con.cursor()
-    print "4"
     
     # logLine( "DB: Connection: Create: Success:")
 
   except db.Error, e:
-    print "4 - err"
     db_cursor = None
     print "DB cursor error: ", e
   return db_cursor
@@ -117,7 +113,7 @@ def postProfileDataDB(uuid):
     utils.logLine(query)
     print "query: ", query
     db_cursor.execute(query)
-    db_cursor.execute("commit")
+    #db_cursor.execute("commit")
 
   except db.Error, e:
     print "DB creation error: ", str(e)
@@ -187,7 +183,7 @@ def postChallengeDB(uuid, bar_code, description):
     utils.logLine(query)
     db_cursor.execute( query)
 
-    db_cursor.execute( "commit")
+    #db_cursor.execute("commit")
     return True
   except db.Error, e:
     print "DB update/insert error: ", e
@@ -236,7 +232,7 @@ def solveChallengeDB(uuid, bar_code, cid):
     utils.logLine(query)
     db_cursor.execute(query)
 
-    db_cursor.execute( "commit")
+    #db_cursor.execute( "commit")
     return True
   except db.Error, e:
     print "DB solve challenge error: ", e
