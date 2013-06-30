@@ -158,12 +158,13 @@ def postChallengeDB(uuid, bar_code, description):
 
   global db_con
   global db_cursor
-
+  print "11"
   if uuid is None or bar_code is None or description is None:
     print "Invalid input to postChallengeDb"
     utils.logLine("Invalid input to postChallengeDb")
     return False
 
+  print "12"
   try:  
     # Challenge: Add: Query:
     db_cursor = getDbCursor()
@@ -173,6 +174,7 @@ def postChallengeDB(uuid, bar_code, description):
                      str(UNSOLVED) + ',' + '\''  +\
                      db_con.escape_string(str(uuid)) + '\',' + ' now(),' + ' now())'
     utils.logLine(query)
+    print "13 -- query: ", query
     db_cursor.execute(query)
     
     # User: Update: Submit_count: Increment

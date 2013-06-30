@@ -125,7 +125,6 @@ def processChallengeListGet( user_do = None, filter = None):
 def processChallengePost( user_do = None, challenge_do = None):
     
   utils.logLine( "processChallengePost: BEGN ")
-
   if user_do is None:
     print "user DO cannot be None"
     utils.logLine( "processChallengePost Error: user DO None")
@@ -153,7 +152,7 @@ def processChallengePost( user_do = None, challenge_do = None):
     return None
   description = description.strip()
     
-  dbResp = postChallengeDB(user_do.uuid, challenge_do.bar_code, description)
+  dbResp = dbManager.postChallengeDB(user_do.uuid, challenge_do.bar_code, description)
   if not dbResp:
     print "Unable to submit challenge into DB!"
     utils.logLine( "processChallengePost Error: Unable to submit challenge into DB!")
@@ -188,7 +187,7 @@ def processChallengeSolve( user_do = None, challenge_do = None):
     utils.logLine( "processChallengeSolve: Error: bar_code None")
     return None
 
-  dbResp = solveChallengeDB(user_do.uuid, challenge_do.bar_core, challenge_do.cid)
+  dbResp = dbManager.solveChallengeDB(user_do.uuid, challenge_do.bar_core, challenge_do.cid)
   if not dbResp:
     print "Unable to solvechallenge into DB!"
     utils.logLine( "processChallengeSolve Error: Unable to solve challenge into DB!")
@@ -278,15 +277,14 @@ class RequestHandler(BaseHandler):
     
     parsed_data = utils.parseData( data, 'POST')
     if parsed_data['status'] == FAILURE:
-        return utils.sendErrResp(parsed_data['err_msg'])
+      return utils.sendErrResp(parsed_data['err_msg'])
     utils.logLine( "PrDa: " + str(parsed_data))
           
     resp_raw = processRequest( parsed_data['req'], parsed_data['type'])
     if resp_raw['status'] == FAILURE:
-        return utils.sendErrResp(resp_raw['err_msg'])  
+      return utils.sendErrResp(resp_raw['err_msg'])  
     if resp_raw['r_payload'] is None:
-        print "here..."
-        return utils.sendErrResp("Unable to process request")
+      return utils.sendErrResp("Unable to process request")
     resp_msg = utils.generateResponse( resp_raw['r_payload'], parsed_data['req_msg_id'], parsed_data['type'])
     resp = rc.ALL_OK
     resp['Content-Type'] = 'text/json'
