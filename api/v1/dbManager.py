@@ -49,7 +49,7 @@ def getDbCursor():
   try:
     # DB: Connection: Create
     db_con = db.connect( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
-    db_con.autoCommit(True)
+    db_con.autocommit(True)
     
     # DB: Init: Success
     db_init_flag = True
