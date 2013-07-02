@@ -8,6 +8,14 @@ from django.core.exceptions import ObjectDoesNotExist
 
 UNSOLVED = 0
 SOLVED   = 1
+#UsrTblColList = ['uuid', 'profile_name', 'points', 'solved_count', 'submit_count']
+UserTblCol = {
+'uuid': 0,
+'profile_name': 1,
+'points': 2, 
+'solved_count': 3,
+'submit_count': 4
+}  
 
 def postProfileDataDB(uuid):
 
@@ -21,7 +29,11 @@ def postProfileDataDB(uuid):
 def getProfileDataDB(uuid):
   if uuid is None or uuid == '':
     return None
-  user = User.objects.get(uuid=uuid)
+  try:
+    user = User.objects.get(uuid=uuid)
+  except ObjectDoesNotExist:
+    print "User does not exist"
+    return None
   return (user.uuid, user.profile_name, user.points, user.solved_count, user.submit_count)  
  
 def getChallengesListDB(uuid, filter = None):
