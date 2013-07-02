@@ -120,8 +120,10 @@ def processChallengeListGet( user_do = None, filter = None):
   ch_list_response = bwdo_pb2.GetChallengesListResponse()
   for challenge_row in challengeListData:
       ch_do = ch_list_response.challenge_list.add()
-      ch_do.cid = str(challenge_row[dbManager.ChallengeTblCol['cid']])
-      ch_do.description = str(challenge_row[dbManager.ChallengeTblCol['description']])
+      #ch_do.cid = str(challenge_row[dbManager.ChallengeTblCol['cid']])
+      #ch_do.description = str(challenge_row[dbManager.ChallengeTblCol['description']])
+      ch_do.cid = str(challenge_row['cid'])
+      ch_do.description = str(challenge_row['description'])
 
   utils.logLine( "processChallengeListGet DONE: challenges list: " + str(ch_list_response))
   return ch_list_response.SerializeToString()
