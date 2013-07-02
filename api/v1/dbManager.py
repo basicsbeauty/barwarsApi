@@ -41,7 +41,12 @@ def getChallengesListDB(uuid, filter = None):
   if uuid is None or uuid == '':
     return False
   #TODO: pending filter logic
-  challenges = Challenge.objects.filter(status = 0).exclude(uuid = uuid)
+  try:
+    user = User.objects.get(uuid=uuid)
+  except ObjectDoesNotExist:
+    print "User does not exist to list challenges"
+    return None
+  challenges = Challenge.objects.filter(status = 0).exclude(uuid = user)
   for challenge in challenges:
     ch_obj = {}
     ch_obj['cid'] = challenge.cid
