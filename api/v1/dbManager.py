@@ -50,7 +50,7 @@ def getChallengesListDB(uuid, filter = None):
   for challenge in challenges:
     ch_obj = {}
     ch_obj['cid'] = challenge.cid
-    ch_obj['description'] = challenge.description
+    ch_obj['description'] = challenge.description.title()
     ch_list.append(ch_obj)
   print ch_list
   return ch_list
@@ -70,7 +70,7 @@ def postChallengeDB(uuid, bar_code, description):
     print "Not a duplicate submission"
     
   user = User.objects.get(uuid = uuid)
-  challenge= Challenge(uuid = user, barcode = bar_code, status = UNSOLVED, description = description)
+  challenge= Challenge(uuid = user, barcode = bar_code, status = UNSOLVED, description = description.title())
   challenge.save()
 
   user = User.objects.get(uuid = uuid)
