@@ -11,6 +11,7 @@ SOLVED   = 1
 
 def postProfileDataDB(uuid):
 
+  print "post profile - 1, uuid : ", uuid
   if uuid is None or uuid == '':
     return False
   user = User(uuid = uuid, profile_name = getRandomProfileName())
@@ -106,4 +107,5 @@ def getRandomProfileName():
 
   min_index = 0
   max_index = len(static_profile_name_list) 
+  return static_profile_name_list[random.randint( min_index, max_index)].strip()
 
