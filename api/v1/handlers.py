@@ -59,12 +59,19 @@ def processProfilePost( user_do = None, challenge_do = None):
     utils.logLine( "processProfilePost: Error: user DO None")
     return None
 
+  # Profile: Presence: Check
+  userProfileData = dbManager.getProfileDataDB(user_do.uuid)
+  if userProfileData:
+    print "Profile: Already: Present:"
+    utils.logLine( "processProfileGet: Error: Profile: Already: Present")
+    return processProfileGet( user_do)
+
   dbResp = dbManager.postProfileDataDB(user_do.uuid)
   if not dbResp:
     print "user DO cannot be None"
     utils.logLine( "processProfilePost: Error: DB operation failed")
     return None
-  
+
   utils.logLine( "processProfilePost: DONE")
   return processProfileGet(user_do)
 

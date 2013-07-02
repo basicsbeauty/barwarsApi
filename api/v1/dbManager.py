@@ -27,7 +27,7 @@ ChallengeTblCol = {
   'description': 1
 }
 
-dflt_points = 128
+dflt_points = 100
 dflt_solved_count = 0
 dflt_submit_count = 0
 
@@ -64,6 +64,36 @@ def getDbCursor():
     print "DB cursor error: ", e
   return db_cursor
 
+################################################################
+#  Name: getRandomName
+################################################################
+def getRandomProfileName():
+
+  static_profile_name_list = [  'Aayla','Admiral','Admiral','Admiral','Ahsoka',
+                                'Anakin','Asajj','Aurra','Bail','Barriss',
+                                'Bastila','Ben','Bib','Biggs','Boba',
+                                'Bossk','Boss','C3P0','Cad','Cade',
+                                'Canderous','Captain','Chewbacca','Commander','Count',
+                                'Dak','Darth','Darth','Darth','Darth',
+                                'Darth','Darth','Darth','Darth','Darth',
+                                'Dash','Dengar','Desann','Doctor','Durge',
+                                'Emperor','Exar','General','General','Gilad',
+                                'Grand','Grand','Greedo','Han','HK-47',
+                                'Hondo','IG-88','Jabba','Jacen','Jaina',
+                                'Jango','Jaxxon','Jek','Jerec','Joruus',
+                                'Ki-Adi-Mundi','Kir','Kit','Kyle','Lando',
+                                'Lobot','Luke','Luminara','Lumiya','Mace',
+                                'Malakili','Mara','Max','Mon','Natasi',
+                                'Nien','Noa','Obi-Wan','Oola','Padme',
+                                'Plo','Princess','Prince','PROXY','Qui-Gon',
+                                'Quinlan','R2-D2','RX-24','Salacious','Sebulba',
+                                'Shaak','Starkiller','Talon','Uncle','Watto',
+                                'Wedge','Wicket','Yaddle','Yoda','Zam']
+
+  min_index = 0
+  max_index = len(static_profile_name_list) 
+
+  return static_profile_name_list[random.randint( min_index, max_index)].strip()
 
 def getProfileDataDB(uuid):
   global db_con
@@ -101,10 +131,11 @@ def postProfileDataDB(uuid):
     return False
   try:
     db_cursor = getDbCursor()
-    profile_names = [ 'Detective', 'Discoverer', 'Hunter'] 
+    profile_names = [ 'Detective', 'Discoverer', 'Hunter']
+    profile_names 
     query  = 'insert into ' + UserTblName + ' values(' + '\''    +\
                 db_con.escape_string(str(uuid)) + '\', ' + '\''  +\
-                profile_names[random.randint(0, 2)]   + '\', '   +\
+                getRandomProfileName() + '\', '   +\
                 str(dflt_points)       + ', ' +\
                 str(dflt_solved_count) + ', ' +\
                 str(dflt_submit_count) + ', ' +\
@@ -161,9 +192,23 @@ def postChallengeDB(uuid, bar_code, description):
     return False
 
   print "12"
-  try:  
-    # Challenge: Add: Query:
+  try:
+    
     db_cursor = getDbCursor()
+    
+    # Challenge: Duplicate: Check:
+    query  = 'select * from ' + ChallengeTblName + ' where '
+    query += 'barcode like \'' + db_con.escape_string(str(bar_code)) + '\''
+    query += 'and uuid like \'' + db_con.escape_string(str(uuid)) + '\''
+    utils.logLine(query)
+    db_cursor.execute(query)
+    if db_cursor.fetchone():
+      err_msg = "Duplicate: Challenge: "
+      print err_msg + query
+      err_msg = ""
+      return False
+         
+    # Challenge: Add: Query:
     query  = 'insert into ' + ChallengeTblName + '( barcode, description, status, uuid, time_created, time_updated)  values('
     query += '\''  + db_con.escape_string(str(bar_code)) + '\',' + '\'' +\
                      db_con.escape_string(str(description)) + '\',' +\
